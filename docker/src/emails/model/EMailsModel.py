@@ -26,7 +26,7 @@ class EMailsModel:
         return q
 
     @classmethod
-    def correos(cls, mid=None, solo_pendientes=True, offset=None, limit=None):
+    def correos(cls, mid=None, solo_pendientes=False, offset=None, limit=None):
         session = Session()
         try:
             q = session.query(Mail)
@@ -51,10 +51,12 @@ class EMailsModel:
 
     @classmethod
     def enviar_correos_pendientes(cls):
+        enviados = []
         session = Session()
         try:
-            if session.query(Mail).filter(Mail.enviado == None).count() <= 0:
-                return
+            cantidad = session.query(Mail).filter(Mail.enviado == None).count()
+            if cantidad <= 0:
+                return {'pendientes':cantidad, 'enviados':[]}
             service = cls._get_google_service()
             pendientes = session.query(Mail).filter(Mail.enviado == None).all()
             for m in pendientes:
@@ -64,12 +66,14 @@ class EMailsModel:
                     m.respuesta = str(r)
                     m.enviado = datetime.datetime.now()
                     session.commit()
+                    enviados.append(m.id)
 
                 except Exception as e:
                     logging.exception(e)
 
         finally:
             session.close()
+        return {'pendientes':cantidad, 'enviados':enviados}
 
     @classmethod
     def _get_google_service(cls):

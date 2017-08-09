@@ -38,9 +38,9 @@ def options(mid=None):
 def correos(mid):
     offset = request.args.get('offset',None,int)
     limit = request.args.get('limit',None,int)
-    pendientes = request.args.get('p',True,bool)
+    solo_pendientes = request.args.get('p',False,bool)
     if not mid:
-        return EMailsModel.correos(solo_pendientes=pendientes, offset=offset, limit=limit)
+        return EMailsModel.correos(solo_pendientes=solo_pendientes, offset=offset, limit=limit)
     else:
         ms = EMailsModel.correos(mid=mid, solo_pendientes=False)
         return None if len(ms) == 0 else ms[0]
@@ -62,10 +62,12 @@ def enviar_correo():
     EMailsModel.enviar_correo(de, para, asunto, cuerpo)
 
 
-@app.route('/emails/api/v1.0/enviar_pendientes', methods=['PUT','POST'])
+@app.route('/emails/api/v1.0/enviar_pendientes', methods=['GET','PUT','POST'])
 @jsonapi
 def enviar_pendientes():
-    EMailsModel.enviar_correos_pendientes()
+    r = EMailsModel.enviar_correos_pendientes()
+    print(r)
+    return r
 
 @app.after_request
 def add_header(r):
