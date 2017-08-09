@@ -1,0 +1,91 @@
+import uuid
+import datetime
+import base64
+import logging
+import os
+
+from sqlalchemy import or_
+from sqlalchemy.orm import joinedload
+
+from email.mime.text import MIMEText
+from email.header import Header
+
+from . import Session
+from .entities import *
+
+from .GoogleApi import GAuthApis
+
+class EMailsModel:
+
+    EMAILS_GOOGLE_USER = os.environ['EMAILS_GOOGLE_USER']
+
+    @staticmethod
+    def _aplicar_filtros_comunes(q, offset, limit):
+        q = q.offset(offset) if offset else q
+        q = q.limit(limit) if limit else q
+        return q
+
+    @classmethod
+    def correos(cls, mid=None, solo_pendientes=True, offset=None, limit=None):
+        session = Session()
+        try:
+            q = session.query(Mail)
+            q = q.filter(Mail.id == mid) if mid else q
+            q = q.filter(Mail.enviado == None) if solo_pendientes else q
+            q = cls._aplicar_filtros_comunes(q, offset,limit)
+            return q.all()
+        finally:
+            session.close()
+
+
+    @classmethod
+    def enviar_correo(cls, de, para, asunto, cuerpo):
+        ''' inserta un correo en la cola para ser enviado (se supone codificación base64 urlsafe) '''
+        session = Session()
+        try:
+            mail = Mail(de=de, para=para, asunto=asunto, cuerpo=cuerpo)
+            session.add(mail)
+            session.commit()
+        finally:
+            session.close()
+
+    @classmethod
+    def enviar_correos_pendientes(cls):
+        session = Session()
+        try:
+            if session.query(Mail).filter(Mail.enviado == None).count() <= 0:
+                return
+            service = cls._get_google_service()
+            pendientes = session.query(Mail).filter(Mail.enviado == None).all()
+            for m in pendientes:
+                try:
+                    cuerpo = base64.urlsafe_b64decode(m.cuerpo)
+                    r = cls._enviar_correo_google(service, m.de, m.para, m.asunto, cuerpo)
+                    m.respuesta = str(r)
+                    m.enviado = datetime.datetime.now()
+                    session.commit()
+
+                except Exception as e:
+                    logging.exception(e)
+
+        finally:
+            session.close()
+
+    @classmethod
+    def _get_google_service(cls):
+        service = GAuthApis.getService('gmail', 'v1', cls.EMAILS_GOOGLE_USER)
+        return service
+
+    @classmethod
+    def _enviar_correo_google(cls, service, de, para, asunto, cuerpo):
+        ''' https://developers.google.com/gmail/api/guides/sending '''
+
+        correo = MIMEText(cuerpo, 'plain', 'utf-8')
+        correo['to'] = para
+        correo['from'] = de
+        correo['subject'] = Header(asunto, 'utf-8')
+        urlsafe = base64.urlsafe_b64encode(correo.as_string().encode()).decode()
+
+        r = service.users().messages().send(userId=cls.EMAILS_GOOGLE_USER, body={'raw':urlsafe}).execute()
+        print(r)
+        return r
