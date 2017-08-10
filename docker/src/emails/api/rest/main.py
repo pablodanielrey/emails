@@ -62,7 +62,7 @@ def enviar_correo():
     EMailsModel.enviar_correo(de, para, asunto, cuerpo)
 
 
-@app.route('/emails/api/v1.0/enviar_pendientes', methods=['GET','PUT','POST'])
+@app.route('/emails/api/v1.0/enviar_pendientes', methods=['GET'])
 @jsonapi
 def enviar_pendientes():
     r = EMailsModel.enviar_correos_pendientes()
