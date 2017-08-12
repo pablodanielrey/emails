@@ -39,11 +39,11 @@ class EMailsModel:
 
 
     @classmethod
-    def enviar_correo(cls, de, para, asunto, cuerpo):
+    def enviar_correo(cls, sistema, de, para, asunto, cuerpo):
         ''' inserta un correo en la cola para ser enviado (se supone codificación base64 urlsafe) '''
         session = Session()
         try:
-            mail = Mail(de=de, para=para, asunto=asunto, cuerpo=cuerpo)
+            mail = Mail(sistema=sistema, de=de, para=para, asunto=asunto, cuerpo=cuerpo)
             session.add(mail)
             session.commit()
         finally:
@@ -91,5 +91,4 @@ class EMailsModel:
         urlsafe = base64.urlsafe_b64encode(correo.as_string().encode()).decode()
 
         r = service.users().messages().send(userId=cls.EMAILS_GOOGLE_USER, body={'raw':urlsafe}).execute()
-        print(r)
         return r

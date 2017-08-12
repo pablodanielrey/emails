@@ -12,7 +12,6 @@ register_encoder(app)
 
 @app.route('/emails/api/v1.0/correos/', methods=['OPTIONS'])
 @app.route('/emails/api/v1.0/correos/<mid>', methods=['OPTIONS'])
-@app.route('/emails/api/v1.0/enviar_correo', methods=['OPTIONS'])
 @app.route('/emails/api/v1.0/enviar_pendientes', methods=['OPTIONS'])
 def options(mid=None):
     '''
@@ -45,29 +44,28 @@ def correos(mid):
         ms = EMailsModel.correos(mid=mid, solo_pendientes=False)
         return None if len(ms) == 0 else ms[0]
 
-@app.route('/emails/api/v1.0/enviar_correo', methods=['PUT','POST'])
+@app.route('/emails/api/v1.0/correos/', methods=['PUT','POST'])
 @jsonapi
 def enviar_correo():
-    print(request.data)
     datos = json.loads(request.data)
-    print(datos)
+    sistema = datos['sistema'] if 'sistema' in datos else ''
     de = datos['de']
-    assert de is not None
     para = datos['para']
-    assert para is not None
     asunto = datos['asunto']
-    assert asunto is not None
     cuerpo = datos['cuerpo']
+
+    assert de is not None
+    assert para is not None
+    assert asunto is not None
     assert cuerpo is not None
-    EMailsModel.enviar_correo(de, para, asunto, cuerpo)
+
+    EMailsModel.enviar_correo(sistema, de, para, asunto, cuerpo)
 
 
 @app.route('/emails/api/v1.0/enviar_pendientes', methods=['GET'])
 @jsonapi
 def enviar_pendientes():
-    r = EMailsModel.enviar_correos_pendientes()
-    print(r)
-    return r
+    return EMailsModel.enviar_correos_pendientes()
 
 @app.after_request
 def add_header(r):

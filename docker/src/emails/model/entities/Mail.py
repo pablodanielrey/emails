@@ -9,6 +9,7 @@ class Mail(Base):
     __tablename__ = 'mails'
     __table_args__ = ({'schema': 'emails'})
 
+    sistema = Column(String)
     de = Column(String)
     para = Column(String)
     asunto = Column(String)
