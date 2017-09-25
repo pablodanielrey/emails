@@ -34,7 +34,8 @@ setup(name='emails',
                             'flask_jsontools',
                             'SQLAlchemy',
                             'google-api-python-client',
-                            'httplib2'],
+                            'httplib2',
+                            'microservices_common'],
           entry_points={
             'console_scripts': [
                 'wamp=emails.api.wamp.main:main',
