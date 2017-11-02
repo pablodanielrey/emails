@@ -84,7 +84,7 @@ class EMailsModel:
     def _enviar_correo_google(cls, service, de, para, asunto, cuerpo):
         ''' https://developers.google.com/gmail/api/guides/sending '''
 
-        correo = MIMEText(cuerpo, 'plain', 'utf-8')
+        correo = MIMEText(cuerpo, 'html', 'utf-8')
         correo['to'] = para
         correo['from'] = de
         correo['subject'] = Header(asunto, 'utf-8')
