@@ -11,7 +11,7 @@
 
 from setuptools import setup, find_packages
 
-setup(name='emails',
+setup(name='emails-api',
           version='0.1.0.dev0',
           description='Proyecto que se encarga del envío de correos usando gmail',
           url='https://github.com/pablodanielrey/emails',
@@ -38,9 +38,7 @@ setup(name='emails',
                             'microservices_common'],
           entry_points={
             'console_scripts': [
-                'wamp=emails.api.wamp.main:main',
-                'rest=emails.api.rest.main:main',
-                'flask=emails.web.main:main'
+                'rest=emails.api.rest.main:main'
             ]
           }
 
