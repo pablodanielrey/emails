@@ -22,6 +22,4 @@ __all__ = [
 def crear_tablas():
     from .entities import Mail
     from sqlalchemy.schema import CreateSchema
-
-    engine.execute(CreateSchema('emails'))
     Base.metadata.create_all(engine)
